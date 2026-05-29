@@ -1054,9 +1054,12 @@ classdef MetodosNumericosPremiumApp < matlab.apps.AppBase
                     axis(app.MainAxes, 'equal');
 
                 elseif n == 3
-                    % Rango 3D centrado
+                    % Rango 3D centrado con limite maximo para evitar congelamiento.
+                    % Funciones como exp(x) pueden explotar si el rango es grande,
+                    % por eso limitamos span a un maximo de 8 unidades.
                     center = (root(:) + x0(:)) / 2;
-                  span = max(3.2, norm(root(:)-x0(:), inf) + 2.6);
+                    spanRaw = max(3.2, norm(root(:)-x0(:), inf) + 2.6);
+                    span = min(spanRaw, 8);  % limite maximo para evitar congelamiento
 
                     range = [
                         center(1)-span center(1)+span
@@ -1076,7 +1079,9 @@ classdef MetodosNumericosPremiumApp < matlab.apps.AppBase
                             'DisplayName', ['Superficie ' num2str(i)]);
 
                         try
-                            h.MeshDensity = 35;
+                            % MeshDensity reducido a 25 para evitar tiempos de carga
+                            % excesivos con funciones como exp(x), log(x), etc.
+                            h.MeshDensity = 25;
                         catch
                         end
                     end
