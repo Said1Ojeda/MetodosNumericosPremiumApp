@@ -83,6 +83,11 @@ classdef MetodosNumericosPremiumApp < matlab.apps.AppBase
         SummaryLabel matlab.ui.control.Label
         ResultsTextArea matlab.ui.control.TextArea
         StepsTable matlab.ui.control.Table
+
+        % Pestanas del panel de resultados
+        ResultsTabGroup matlab.ui.container.TabGroup
+        SummaryTab matlab.ui.container.Tab
+        IterationsTab matlab.ui.container.Tab
     end
 
     properties (Access = private)
@@ -1054,9 +1059,12 @@ classdef MetodosNumericosPremiumApp < matlab.apps.AppBase
                     axis(app.MainAxes, 'equal');
 
                 elseif n == 3
-                    % Rango 3D centrado
+                    % Rango 3D centrado con limite maximo para evitar congelamiento.
+                    % Funciones como exp(x) pueden explotar si el rango es grande,
+                    % por eso limitamos span a un maximo de 8 unidades.
                     center = (root(:) + x0(:)) / 2;
-                  span = max(3.2, norm(root(:)-x0(:), inf) + 2.6);
+                    spanRaw = max(3.2, norm(root(:)-x0(:), inf) + 2.6);
+                    span = min(spanRaw, 8);  % limite maximo para evitar congelamiento
 
                     range = [
                         center(1)-span center(1)+span
@@ -1076,7 +1084,9 @@ classdef MetodosNumericosPremiumApp < matlab.apps.AppBase
                             'DisplayName', ['Superficie ' num2str(i)]);
 
                         try
-                            h.MeshDensity = 35;
+                            % MeshDensity reducido a 25 para evitar tiempos de carga
+                            % excesivos con funciones como exp(x), log(x), etc.
+                            h.MeshDensity = 25;
                         catch
                         end
                     end
@@ -1956,7 +1966,7 @@ legend(app.MainAxes, 'Location', 'northeast', 'TextColor', app.TextColor);
             app.RightPanel.BorderType = 'none';
 
             app.RightGrid = uigridlayout(app.RightPanel);
-            app.RightGrid.RowHeight = {'1.9x', '0.75x'};
+            app.RightGrid.RowHeight = {'2.2x', '1x'};
             app.RightGrid.ColumnWidth = {'1x'};
             app.RightGrid.Padding = [14 14 14 14];
             app.RightGrid.RowSpacing = 14;
@@ -1989,7 +1999,7 @@ legend(app.MainAxes, 'Location', 'northeast', 'TextColor', app.TextColor);
             grid(app.MainAxes, 'on');
 
             % ==========================================================
-            % PANEL DE RESULTADOS
+            % PANEL DE RESULTADOS: uitabgroup con dos pestanas
             % ==========================================================
 
             app.ResultsPanel = uipanel(app.RightGrid);
@@ -1998,30 +2008,36 @@ legend(app.MainAxes, 'Location', 'northeast', 'TextColor', app.TextColor);
             app.ResultsPanel.BackgroundColor = app.CardBackground;
             app.ResultsPanel.BorderType = 'none';
 
-            app.ResultsGrid = uigridlayout(app.ResultsPanel);
-            app.ResultsGrid.RowHeight = {38, '1x'};
-            app.ResultsGrid.ColumnWidth = {'1x', '1.15x'};
-            app.ResultsGrid.Padding = [12 12 12 12];
-            app.ResultsGrid.RowSpacing = 10;
-            app.ResultsGrid.ColumnSpacing = 12;
-            app.ResultsGrid.BackgroundColor = app.CardBackground;
+            % TabGroup que ocupa todo el panel inferior
+            app.ResultsTabGroup = uitabgroup(app.ResultsPanel);
+            app.ResultsTabGroup.Units = 'normalized';
+            app.ResultsTabGroup.Position = [0 0 1 1];
+            app.ResultsTabGroup.BackgroundColor = app.CardBackground;
 
             % ----------------------------------------------------------
-            % Resumen superior
+            % PESTANA 1: Resumen
+            % Contiene: SummaryLabel + ResultsTextArea
             % ----------------------------------------------------------
+
+            app.SummaryTab = uitab(app.ResultsTabGroup);
+            app.SummaryTab.Title = 'Resumen';
+            app.SummaryTab.BackgroundColor = app.CardBackground;
+
+            app.ResultsGrid = uigridlayout(app.SummaryTab);
+            app.ResultsGrid.RowHeight = {36, '1x'};
+            app.ResultsGrid.ColumnWidth = {'1x'};
+            app.ResultsGrid.Padding = [10 10 10 10];
+            app.ResultsGrid.RowSpacing = 8;
+            app.ResultsGrid.BackgroundColor = app.CardBackground;
 
             app.SummaryLabel = uilabel(app.ResultsGrid);
             app.SummaryLabel.Layout.Row = 1;
-            app.SummaryLabel.Layout.Column = [1 2];
+            app.SummaryLabel.Layout.Column = 1;
             app.SummaryLabel.Text = 'Esperando datos...';
-            app.SummaryLabel.FontSize = 16;
+            app.SummaryLabel.FontSize = 15;
             app.SummaryLabel.FontWeight = 'bold';
             app.SummaryLabel.FontColor = app.TextColor;
             app.SummaryLabel.HorizontalAlignment = 'center';
-
-            % ----------------------------------------------------------
-            % Área de texto con resultados
-            % ----------------------------------------------------------
 
             app.ResultsTextArea = uitextarea(app.ResultsGrid);
             app.ResultsTextArea.Layout.Row = 2;
@@ -2038,12 +2054,17 @@ legend(app.MainAxes, 'Location', 'northeast', 'TextColor', app.TextColor);
                 };
 
             % ----------------------------------------------------------
-            % Tabla de pasos / iteraciones / comparación
+            % PESTANA 2: Iteraciones / Matrices
+            % Contiene: StepsTable a ancho completo
             % ----------------------------------------------------------
 
-            app.StepsTable = uitable(app.ResultsGrid);
-            app.StepsTable.Layout.Row = 2;
-            app.StepsTable.Layout.Column = 2;
+            app.IterationsTab = uitab(app.ResultsTabGroup);
+            app.IterationsTab.Title = 'Iteraciones / Matrices';
+            app.IterationsTab.BackgroundColor = app.CardBackground;
+
+            app.StepsTable = uitable(app.IterationsTab);
+            app.StepsTable.Units = 'normalized';
+            app.StepsTable.Position = [0 0 1 1];
             app.StepsTable.BackgroundColor = [1 1 1; 0.94 0.97 1.00];
             app.StepsTable.ForegroundColor = [0.05 0.05 0.08];
             app.StepsTable.FontSize = 12;
