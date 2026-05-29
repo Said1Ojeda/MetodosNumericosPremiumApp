@@ -73,6 +73,8 @@ classdef MetodosNumericosPremiumApp < matlab.apps.AppBase
         % Botones globales
         ClearButton matlab.ui.control.Button
         HelpButton matlab.ui.control.Button
+        ExportResultsButton matlab.ui.control.Button
+        SaveGraphButton matlab.ui.control.Button
 
         % Panel derecho
         RightPanel matlab.ui.container.Panel
@@ -293,6 +295,11 @@ classdef MetodosNumericosPremiumApp < matlab.apps.AppBase
         % ==============================================================
 
         function SolveNewtonButtonPushed(app, ~)
+            % Mensaje de carga inmediato para que el usuario sepa que MATLAB esta trabajando
+            app.SummaryLabel.Text = '\u23f3 Generando c�lculos, espere...';
+            app.SummaryLabel.FontColor = app.AccentCyan;
+            drawnow;  % Fuerza a MATLAB a renderizar el mensaje antes de calcular
+
             try
                 % 1. Leer entradas del usuario
                 eqs = app.parseEquationSystem(app.NonlinearSystemTextArea.Value);
@@ -398,6 +405,11 @@ classdef MetodosNumericosPremiumApp < matlab.apps.AppBase
         % ==============================================================
 
         function SolveLinearButtonPushed(app, ~)
+            % Mensaje de carga inmediato
+            app.SummaryLabel.Text = '\u23f3 Resolviendo sistema lineal, espere...';
+            app.SummaryLabel.FontColor = app.AccentCyan;
+            drawnow;  % Fuerza renderizado antes de bloquear con calculos
+
             try
                 % 1. Leer matriz y vector desde la interfaz
                 A = app.parseMatrix(app.MatrixATextArea.Value);
@@ -1016,8 +1028,10 @@ classdef MetodosNumericosPremiumApp < matlab.apps.AppBase
 
                     if exist('history', 'var') && ~isempty(history) && size(history, 1) == 2 && size(history, 2) >= 2
 
-                        % Dibujar línea amarilla del recorrido
-                        plot(app.MainAxes, history(1, :), history(2, :), '-o', ...
+                        % Animacion del recorrido de Newton punto a punto en 2D
+                        % Cada iteracion se dibuja con una pausa para efecto visual.
+                        nSteps = size(history, 2);
+                        hLine = plot(app.MainAxes, history(1, 1), history(2, 1), '-o', ...
                             'LineWidth', 2.8, ...
                             'MarkerSize', 7, ...
                             'Color', [1.00 0.78 0.15], ...
@@ -1025,13 +1039,20 @@ classdef MetodosNumericosPremiumApp < matlab.apps.AppBase
                             'MarkerEdgeColor', [0.05 0.05 0.05], ...
                             'DisplayName', 'Recorrido Newton');
 
-                        % Etiquetar cada punto con su número de iteración
-                        for kk = 1:size(history, 2)
+                        text(app.MainAxes, history(1, 1), history(2, 1), ...
+                            '  k=0', 'Color', [1.00 0.90 0.35], ...
+                            'FontSize', 10, 'FontWeight', 'bold');
+                        drawnow;
+
+                        for kk = 2:nSteps
+                            % Extender la linea hasta el siguiente punto
+                            set(hLine, 'XData', history(1, 1:kk), 'YData', history(2, 1:kk));
                             text(app.MainAxes, history(1, kk), history(2, kk), ...
                                 ['  k=' num2str(kk-1)], ...
                                 'Color', [1.00 0.90 0.35], ...
-                                'FontSize', 10, ...
-                                'FontWeight', 'bold');
+                                'FontSize', 10, 'FontWeight', 'bold');
+                            drawnow;
+                            pause(0.20);  % Pausa para efecto de animacion
                         end
                     end
 
@@ -1105,22 +1126,31 @@ classdef MetodosNumericosPremiumApp < matlab.apps.AppBase
 
                     if exist('history', 'var') && ~isempty(history) && size(history, 1) == 3 && size(history, 2) >= 2
 
-                        % Dibujar línea amarilla del recorrido en 3D
-                        plot3(app.MainAxes, history(1, :), history(2, :), history(3, :), '-o', ...
+                        % Animacion del recorrido de Newton punto a punto en 3D
+                        nSteps3 = size(history, 2);
+                        hLine3 = plot3(app.MainAxes, history(1, 1), history(2, 1), history(3, 1), '-o', ...
                             'LineWidth', 4.2, ...
-                             'MarkerSize', 10, ...
+                            'MarkerSize', 10, ...
                             'Color', [1.00 0.78 0.15], ...
                             'MarkerFaceColor', [1.00 0.78 0.15], ...
                             'MarkerEdgeColor', [0.05 0.05 0.05], ...
                             'DisplayName', 'Recorrido Newton');
 
-                        % Etiquetar cada punto con su número de iteración
-                        for kk = 1:size(history, 2)
+                        text(app.MainAxes, history(1, 1), history(2, 1), history(3, 1), ...
+                            '  k=0', 'Color', [1.00 0.90 0.35], ...
+                            'FontSize', 12, 'FontWeight', 'bold');
+                        drawnow;
+
+                        for kk = 2:nSteps3
+                            set(hLine3, 'XData', history(1, 1:kk), ...
+                                        'YData', history(2, 1:kk), ...
+                                        'ZData', history(3, 1:kk));
                             text(app.MainAxes, history(1, kk), history(2, kk), history(3, kk), ...
                                 ['  k=' num2str(kk-1)], ...
                                 'Color', [1.00 0.90 0.35], ...
-                                'FontSize', 12, ...
-                                'FontWeight', 'bold');
+                                'FontSize', 12, 'FontWeight', 'bold');
+                            drawnow;
+                            pause(0.20);  % Pausa para efecto de animacion
                         end
                     end
 
@@ -1404,6 +1434,69 @@ legend(app.MainAxes, 'Location', 'northeast', 'TextColor', app.TextColor);
         % LIMPIAR
         % ==============================================================
 
+        % ==============================================================
+        % EXPORTAR RESULTADOS A .TXT
+        % ==============================================================
+
+        function ExportResultsButtonPushed(app, ~)
+            % Obtener el contenido del area de texto de resultados
+            lines = app.ResultsTextArea.Value;
+
+            if isempty(lines) || (numel(lines) == 1 && isempty(lines{1}))
+                uialert(app.UIFigure, ...
+                    'No hay resultados para exportar. Resuelva un sistema primero.', ...
+                    'Sin datos', 'Icon', 'warning');
+                return;
+            end
+
+            % Abrir dialogo para elegir donde guardar
+            [fileName, filePath] = uiputfile('*.txt', 'Guardar resultados como...', 'resultados_metodos_numericos.txt');
+
+            if isequal(fileName, 0)
+                return;  % El usuario cancelo
+            end
+
+            fullPath = fullfile(filePath, fileName);
+
+            try
+                writelines(lines, fullPath);
+                uialert(app.UIFigure, ...
+                    ['Resultados guardados en:' newline fullPath], ...
+                    'Exportado correctamente', 'Icon', 'success');
+            catch ME
+                uialert(app.UIFigure, ...
+                    ['No se pudo guardar el archivo:' newline ME.message], ...
+                    'Error al exportar', 'Icon', 'error');
+            end
+        end
+
+        % ==============================================================
+        % GUARDAR GRAFICA COMO .PNG
+        % ==============================================================
+
+        function SaveGraphButtonPushed(app, ~)
+            % Abrir dialogo para elegir donde guardar la imagen
+            [fileName, filePath] = uiputfile('*.png', 'Guardar gráfica como...', 'grafica_metodos_numericos.png');
+
+            if isequal(fileName, 0)
+                return;  % El usuario cancelo
+            end
+
+            fullPath = fullfile(filePath, fileName);
+
+            try
+                % exportgraphics guarda el contenido del axes con alta calidad
+                exportgraphics(app.MainAxes, fullPath, 'Resolution', 200);
+                uialert(app.UIFigure, ...
+                    ['Gráfica guardada en:' newline fullPath], ...
+                    'Imagen guardada', 'Icon', 'success');
+            catch ME
+                uialert(app.UIFigure, ...
+                    ['No se pudo guardar la imagen:' newline ME.message], ...
+                    'Error al guardar', 'Icon', 'error');
+            end
+        end
+
         function ClearButtonPushed(app, ~)
             app.NonlinearSystemTextArea.Value = {};
             app.InitialGuessEditField.Value = '';
@@ -1541,7 +1634,7 @@ legend(app.MainAxes, 'Location', 'northeast', 'TextColor', app.TextColor);
             app.LeftPanel.BorderType = 'none';
 
             app.LeftGrid = uigridlayout(app.LeftPanel);
-            app.LeftGrid.RowHeight = {48, 26, '1x', 38, 38};
+            app.LeftGrid.RowHeight = {48, 26, '1x', 38, 38, 38, 38};
             app.LeftGrid.ColumnWidth = {'1x'};
             app.LeftGrid.Padding = [12 12 12 12];
             app.LeftGrid.RowSpacing = 7;
@@ -1949,6 +2042,36 @@ legend(app.MainAxes, 'Location', 'northeast', 'TextColor', app.TextColor);
             app.HelpButton.BackgroundColor = app.AccentBlue;
             app.HelpButton.ButtonPushedFcn = createCallbackFcn(app, @HelpButtonPushed, true);
             app.HelpButton.Tooltip = 'Mostrar instrucciones generales de uso';
+
+            % ----------------------------------------------------------
+            % Boton: Exportar Resultados
+            % ----------------------------------------------------------
+
+            app.ExportResultsButton = uibutton(app.LeftGrid, 'push');
+            app.ExportResultsButton.Layout.Row = 6;
+            app.ExportResultsButton.Layout.Column = 1;
+            app.ExportResultsButton.Text = '📄 Exportar Resultados';
+            app.ExportResultsButton.FontSize = 13;
+            app.ExportResultsButton.FontWeight = 'bold';
+            app.ExportResultsButton.FontColor = [1 1 1];
+            app.ExportResultsButton.BackgroundColor = [0.20 0.45 0.30];
+            app.ExportResultsButton.ButtonPushedFcn = createCallbackFcn(app, @ExportResultsButtonPushed, true);
+            app.ExportResultsButton.Tooltip = 'Guardar los resultados del panel en un archivo .txt';
+
+            % ----------------------------------------------------------
+            % Boton: Guardar Grafica
+            % ----------------------------------------------------------
+
+            app.SaveGraphButton = uibutton(app.LeftGrid, 'push');
+            app.SaveGraphButton.Layout.Row = 7;
+            app.SaveGraphButton.Layout.Column = 1;
+            app.SaveGraphButton.Text = '🖼️ Guardar Gráfica';
+            app.SaveGraphButton.FontSize = 13;
+            app.SaveGraphButton.FontWeight = 'bold';
+            app.SaveGraphButton.FontColor = [1 1 1];
+            app.SaveGraphButton.BackgroundColor = [0.30 0.20 0.55];
+            app.SaveGraphButton.ButtonPushedFcn = createCallbackFcn(app, @SaveGraphButtonPushed, true);
+            app.SaveGraphButton.Tooltip = 'Guardar la gráfica actual como imagen .png';
 
             % ==========================================================
             % PANEL DERECHO
