@@ -90,6 +90,7 @@ classdef MetodosNumericosPremiumApp < matlab.apps.AppBase
         ResultsTabGroup matlab.ui.container.TabGroup
         SummaryTab matlab.ui.container.Tab
         IterationsTab matlab.ui.container.Tab
+        IterationsGrid matlab.ui.container.GridLayout
     end
 
     properties (Access = private)
@@ -296,7 +297,7 @@ classdef MetodosNumericosPremiumApp < matlab.apps.AppBase
 
         function SolveNewtonButtonPushed(app, ~)
             % Mensaje de carga inmediato para que el usuario sepa que MATLAB esta trabajando
-            app.SummaryLabel.Text = '\u23f3 Generando c�lculos, espere...';
+            app.SummaryLabel.Text = 'Calculando... por favor espere';
             app.SummaryLabel.FontColor = app.AccentCyan;
             drawnow;  % Fuerza a MATLAB a renderizar el mensaje antes de calcular
 
@@ -406,7 +407,7 @@ classdef MetodosNumericosPremiumApp < matlab.apps.AppBase
 
         function SolveLinearButtonPushed(app, ~)
             % Mensaje de carga inmediato
-            app.SummaryLabel.Text = '\u23f3 Resolviendo sistema lineal, espere...';
+            app.SummaryLabel.Text = 'Resolviendo sistema lineal, espere...';
             app.SummaryLabel.FontColor = app.AccentCyan;
             drawnow;  % Fuerza renderizado antes de bloquear con calculos
 
@@ -1515,6 +1516,9 @@ legend(app.MainAxes, 'Location', 'northeast', 'TextColor', app.TextColor);
             app.StepsTable.Data = {};
             app.StepsTable.ColumnName = {'Estado', 'Información'};
 
+            % Volver a la pestana Resumen al limpiar
+            app.ResultsTabGroup.SelectedTab = app.SummaryTab;
+
             app.SummaryLabel.Text = 'Esperando datos...';
             app.SummaryLabel.FontColor = app.TextColor;
 
@@ -2050,7 +2054,7 @@ legend(app.MainAxes, 'Location', 'northeast', 'TextColor', app.TextColor);
             app.ExportResultsButton = uibutton(app.LeftGrid, 'push');
             app.ExportResultsButton.Layout.Row = 6;
             app.ExportResultsButton.Layout.Column = 1;
-            app.ExportResultsButton.Text = '📄 Exportar Resultados';
+            app.ExportResultsButton.Text = 'Exportar Resultados (.txt)';
             app.ExportResultsButton.FontSize = 13;
             app.ExportResultsButton.FontWeight = 'bold';
             app.ExportResultsButton.FontColor = [1 1 1];
@@ -2065,7 +2069,7 @@ legend(app.MainAxes, 'Location', 'northeast', 'TextColor', app.TextColor);
             app.SaveGraphButton = uibutton(app.LeftGrid, 'push');
             app.SaveGraphButton.Layout.Row = 7;
             app.SaveGraphButton.Layout.Column = 1;
-            app.SaveGraphButton.Text = '🖼️ Guardar Gráfica';
+            app.SaveGraphButton.Text = 'Guardar Grafica (.png)';
             app.SaveGraphButton.FontSize = 13;
             app.SaveGraphButton.FontWeight = 'bold';
             app.SaveGraphButton.FontColor = [1 1 1];
@@ -2185,13 +2189,22 @@ legend(app.MainAxes, 'Location', 'northeast', 'TextColor', app.TextColor);
             app.IterationsTab.Title = 'Iteraciones / Matrices';
             app.IterationsTab.BackgroundColor = app.CardBackground;
 
-            app.StepsTable = uitable(app.IterationsTab);
-            app.StepsTable.Units = 'normalized';
-            app.StepsTable.Position = [0 0 1 1];
+            % Grid dentro de la pestana para que la tabla use todo el espacio
+            app.IterationsGrid = uigridlayout(app.IterationsTab);
+            app.IterationsGrid.RowHeight = {'1x'};
+            app.IterationsGrid.ColumnWidth = {'1x'};
+            app.IterationsGrid.Padding = [0 0 0 0];
+            app.IterationsGrid.RowSpacing = 0;
+            app.IterationsGrid.BackgroundColor = app.CardBackground;
+
+            app.StepsTable = uitable(app.IterationsGrid);
+            app.StepsTable.Layout.Row = 1;
+            app.StepsTable.Layout.Column = 1;
             app.StepsTable.BackgroundColor = [1 1 1; 0.94 0.97 1.00];
             app.StepsTable.ForegroundColor = [0.05 0.05 0.08];
             app.StepsTable.FontSize = 12;
             app.StepsTable.ColumnName = {'Estado', 'Información'};
+            app.StepsTable.ColumnWidth = 'auto';
             app.StepsTable.Data = {};
 
             % ----------------------------------------------------------
