@@ -14,6 +14,8 @@ export interface SistemaNoLineal {
   // version en LaTeX para mostrar bonito
   ecuacionesTex: string[]
   evaluar(x: Vector): Vector
+  // igual que evaluar pero devuelve NaN donde no hay valor real, para graficar
+  evaluarSeguro(x: Vector): Vector
   jacobiana(x: Vector): Matriz
   // derivadas parciales simbolicas, null si se usan diferencias finitas
   jacobianaTex: string[][] | null
@@ -131,6 +133,16 @@ export function crearSistema(texto: string): SistemaNoLineal {
       return aNumero(valor, ecuaciones[i], x, variables)
     })
 
+  const evaluarSeguro = (x: Vector): Vector =>
+    compiladas.map((c) => {
+      try {
+        const valor = c.evaluar.evaluate(ambito(variables, x))
+        return typeof valor === 'number' && Number.isFinite(valor) ? valor : NaN
+      } catch {
+        return NaN
+      }
+    })
+
   const jacobianaNumerica = (x: Vector): Matriz => {
     const J: Matriz = Array.from({ length: n }, () => new Array(n).fill(0))
     for (let j = 0; j < n; j++) {
@@ -164,6 +176,7 @@ export function crearSistema(texto: string): SistemaNoLineal {
     variables,
     ecuacionesTex: nodos.map((nodo) => nodo.toTex({ parenthesis: 'auto' })),
     evaluar,
+    evaluarSeguro,
     jacobiana,
     jacobianaTex: derivadas ? derivadas.map((fila) => fila.map((d) => d.nodo.toTex({ parenthesis: 'auto' }))) : null,
     jacobianaAnalitica: derivadas !== null

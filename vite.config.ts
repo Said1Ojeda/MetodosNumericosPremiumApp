@@ -4,7 +4,7 @@ import { defineConfig } from 'vitest/config'
 export default defineConfig({
   base: '/MetodosNumericosPremiumApp/',
   build: {
-    chunkSizeWarningLimit: 5000
+    chunkSizeWarningLimit: 6000
   },
   test: {
     include: ['tests/**/*.test.ts']

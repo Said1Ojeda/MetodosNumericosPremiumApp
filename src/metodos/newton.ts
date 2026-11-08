@@ -134,7 +134,8 @@ export function mapaConvergencia(
   rangoX: [number, number],
   rangoY: [number, number],
   resolucion = 120,
-  maxIteraciones = 40
+  maxIteraciones = 40,
+  alAvanzar?: (fraccion: number) => void
 ): MapaConvergencia {
   const xs = Array.from({ length: resolucion }, (_, i) => rangoX[0] + ((rangoX[1] - rangoX[0]) * i) / (resolucion - 1))
   const ys = Array.from({ length: resolucion }, (_, i) => rangoY[0] + ((rangoY[1] - rangoY[0]) * i) / (resolucion - 1))
@@ -178,6 +179,7 @@ export function mapaConvergencia(
     }
     raizDe.push(filaRaiz)
     vueltas.push(filaVueltas)
+    alAvanzar?.(raizDe.length / resolucion)
   }
 
   return { xs, ys, raizDe, vueltas, raices }

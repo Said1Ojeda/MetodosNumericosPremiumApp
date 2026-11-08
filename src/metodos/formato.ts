@@ -9,8 +9,12 @@ export function formatoNumero(valor: number, decimales = 6): string {
   return String(Number(valor.toFixed(decimales)))
 }
 
-export const formatoCientifico = (valor: number, decimales = 3): string =>
-  Number.isFinite(valor) ? valor.toExponential(decimales) : String(valor)
+export function formatoCientifico(valor: number, decimales = 3): string {
+  if (!Number.isFinite(valor)) return String(valor)
+  // un cero exacto se ve mejor como 0 que como 0.000e+0
+  if (valor === 0) return '0'
+  return valor.toExponential(decimales)
+}
 
 export const formatoVector = (v: number[], decimales = 6): string =>
   `[${v.map((vi) => formatoNumero(vi, decimales)).join(', ')}]`
