@@ -1,0 +1,31 @@
+{
+  "name": "metodos-numericos-premium",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Newton-Raphson multivariable vs sistemas de ecuaciones lineales, interactivo en el navegador",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Said1Ojeda/MetodosNumericosPremiumApp.git"
+  },
+  "author": "Said Ojeda",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/plotly.js": "^3.0.15",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.6",
+    "vitest": "^5.1.0"
+  },
+  "dependencies": {
+    "katex": "^0.19.1",
+    "mathjs": "^15.2.0",
+    "plotly.js-dist-min": "^4.2.0"
+  }
+}
