@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Newton-Raphson multivariable vs sistemas de ecuaciones lineales (Gauss-Jordan y LU), interactivo y animado." />
+    <meta name="theme-color" content="#070a12" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>Métodos Numéricos · Newton vs Sistemas Lineales</title>
+  </head>
+  <body>
+    <div class="fondo" aria-hidden="true">
+      <div class="mancha mancha-1"></div>
+      <div class="mancha mancha-2"></div>
+      <div class="mancha mancha-3"></div>
+      <div class="cuadricula"></div>
+    </div>
+
+    <header class="encabezado">
+      <a class="marca" href="#newton" aria-label="Inicio">
+        <svg class="marca-logo" viewBox="0 0 40 40" aria-hidden="true">
+          <defs>
+            <linearGradient id="g-logo" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#22d3ee" />
+              <stop offset="0.5" stop-color="#a78bfa" />
+              <stop offset="1" stop-color="#f472b6" />
+            </linearGradient>
+          </defs>
+          <rect x="1.5" y="1.5" width="37" height="37" rx="11" fill="none" stroke="url(#g-logo)" stroke-width="2.5" />
+          <path d="M8 29 C 14 29, 15 11, 21 11 S 28 22, 32 12" fill="none" stroke="url(#g-logo)" stroke-width="2.6" stroke-linecap="round" />
+          <circle cx="21" cy="11" r="2.6" fill="#22d3ee" />
+          <circle cx="32" cy="12" r="2.6" fill="#f472b6" />
+        </svg>
+        <span>
+          <strong>Métodos Numéricos</strong>
+          <small>Newton multivariable · Sistemas lineales</small>
+        </span>
+      </a>
+
+      <nav class="pestanas" role="tablist" aria-label="Secciones">
+        <span class="pestanas-indicador" aria-hidden="true"></span>
+        <button class="pestana" role="tab" data-vista="newton">Newton-Raphson</button>
+        <button class="pestana" role="tab" data-vista="lineal">Sistemas lineales</button>
+        <button class="pestana" role="tab" data-vista="comparar">Comparar</button>
+        <button class="pestana" role="tab" data-vista="teoria">Teoría</button>
+      </nav>
+
+      <div class="encabezado-acciones">
+        <span class="atajo" title="Resolver con el teclado"><kbd>Ctrl</kbd>+<kbd>Enter</kbd></span>
+        <a class="boton-icono" href="https://github.com/Said1Ojeda/MetodosNumericosPremiumApp" target="_blank" rel="noopener" aria-label="Código en GitHub">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        </a>
+      </div>
+    </header>
+
+    <main>
+      <!-- NEWTON -->
+      <section class="vista" id="vista-newton" data-vista="newton">
+        <aside class="panel-lateral tarjeta">
+          <div class="tarjeta-titulo">
+            <h2>Datos de entrada</h2>
+            <span class="chip chip-cian">F(x) = 0</span>
+          </div>
+
+          <label class="campo">
+            <span>Biblioteca de ejemplos</span>
+            <select id="nw-ejemplo"></select>
+          </label>
+          <p class="nota" id="nw-descripcion"></p>
+
+          <label class="campo">
+            <span class="campo-etiqueta">
+              Sistema no lineal
+              <small>una ecuación por línea · acepta “=”</small>
+            </span>
+            <textarea id="nw-ecuaciones" rows="4" spellcheck="false" class="mono"></textarea>
+          </label>
+          <div class="vista-previa" id="nw-vista-previa" aria-live="polite"></div>
+
+          <div class="campo">
+            <span>Vector inicial x₀</span>
+            <div class="vector-inicial" id="nw-x0"></div>
+          </div>
+
+          <div class="fila-campos">
+            <label class="campo">
+              <span>Tolerancia ε</span>
+              <input id="nw-tolerancia" class="mono" value="1e-6" inputmode="decimal" />
+            </label>
+            <label class="campo">
+              <span>Máx. iteraciones</span>
+              <input id="nw-max" class="mono" type="number" min="1" max="1000" value="50" />
+            </label>
+          </div>
+
+          <label class="interruptor">
+            <input type="checkbox" id="nw-animar" checked />
+            <span class="interruptor-pista"></span>
+            Animar el recorrido
+          </label>
+
+          <div class="acciones">
+            <button class="boton boton-principal" id="nw-resolver">
+              <span>Resolver con Newton</span>
+            </button>
+            <button class="boton boton-secundario" id="nw-limpiar">Limpiar</button>
+          </div>
+          <button class="boton boton-fantasma" id="nw-compartir">Copiar enlace con este sistema</button>
+        </aside>
+
+        <div class="contenido">
+          <div class="estado vacio" id="nw-estado">
+            <div class="estado-icono"></div>
+            <div>
+              <strong id="nw-estado-titulo">Listo para calcular</strong>
+              <span id="nw-estado-texto">Elige un ejemplo o escribe tu sistema y presiona Resolver.</span>
+            </div>
+          </div>
+
+          <div class="metricas" id="nw-metricas">
+            <div class="metrica"><span>Iteraciones</span><strong data-metrica="iteraciones">—</strong></div>
+            <div class="metrica"><span>Residuo ‖F(x)‖∞</span><strong data-metrica="residuo">—</strong></div>
+            <div class="metrica"><span>Orden de convergencia</span><strong data-metrica="orden">—</strong></div>
+            <div class="metrica"><span>Tiempo</span><strong data-metrica="tiempo">—</strong></div>
+          </div>
+
+          <div class="tarjeta raiz-tarjeta">
+            <div class="tarjeta-titulo">
+              <h3>Raíz encontrada</h3>
+              <button class="boton-chico" id="nw-copiar-raiz">Copiar</button>
+            </div>
+            <div class="raiz" id="nw-raiz"><span class="tenue">Aún no hay resultado</span></div>
+          </div>
+
+          <div class="tarjeta grafica-tarjeta">
+            <div class="tarjeta-titulo">
+              <h3 id="nw-grafica-titulo">Gráfica</h3>
+              <div class="segmentado" id="nw-modo-grafica">
+                <button data-modo="curvas" class="activo">Curvas</button>
+                <button data-modo="mapa">Mapa de convergencia</button>
+              </div>
+              <button class="boton-chico" id="nw-png">PNG</button>
+            </div>
+            <div class="grafica grande" id="nw-grafica"></div>
+            <div class="progreso oculto" id="nw-progreso"><div></div><span>Calculando mapa…</span></div>
+            <p class="nota" id="nw-grafica-nota"></p>
+          </div>
+
+          <div class="dos-columnas">
+            <div class="tarjeta">
+              <div class="tarjeta-titulo"><h3>Convergencia</h3><span class="chip">escala log</span></div>
+              <div class="grafica" id="nw-convergencia"></div>
+            </div>
+            <div class="tarjeta">
+              <div class="tarjeta-titulo">
+                <h3>Matriz Jacobiana</h3>
+                <span class="chip chip-violeta" id="nw-tipo-jacobiana">simbólica</span>
+              </div>
+              <div class="jacobiana" id="nw-jacobiana"><span class="tenue">Se muestra al resolver</span></div>
+            </div>
+          </div>
+
+          <div class="tarjeta">
+            <div class="tarjeta-titulo">
+              <h3>Tabla de iteraciones</h3>
+              <button class="boton-chico" id="nw-csv">Exportar CSV</button>
+            </div>
+            <div class="tabla-contenedor" id="nw-tabla"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- LINEAL -->
+      <section class="vista" id="vista-lineal" data-vista="lineal">
+        <aside class="panel-lateral tarjeta">
+          <div class="tarjeta-titulo">
+            <h2>Sistema Ax = b</h2>
+            <span class="chip chip-magenta">directo</span>
+          </div>
+
+          <label class="campo">
+            <span>Biblioteca de ejemplos</span>
+            <select id="ln-ejemplo"></select>
+          </label>
+          <p class="nota" id="ln-descripcion"></p>
+
+          <div class="campo">
+            <span class="campo-etiqueta">
+              Matriz aumentada [A | b]
+              <span class="contador">
+                <button class="boton-chico" id="ln-menos" aria-label="Quitar una incógnita">−</button>
+                <strong id="ln-tamano">3 × 3</strong>
+                <button class="boton-chico" id="ln-mas" aria-label="Agregar una incógnita">+</button>
+              </span>
+            </span>
+            <div class="editor-matriz" id="ln-editor"></div>
+          </div>
+
+          <details class="importar">
+            <summary>Pegar en formato MATLAB</summary>
+            <label class="campo">
+              <span>A</span>
+              <textarea id="ln-importar-a" rows="3" class="mono" placeholder="[4 -1 0; -1 4 -1; 0 -1 3]"></textarea>
+            </label>
+            <label class="campo">
+              <span>b</span>
+              <input id="ln-importar-b" class="mono" placeholder="[15; 10; 10]" />
+            </label>
+            <button class="boton boton-secundario" id="ln-importar">Cargar</button>
+          </details>
+
+          <div class="acciones">
+            <button class="boton boton-principal" id="ln-resolver"><span>Resolver y comparar</span></button>
+            <button class="boton boton-secundario" id="ln-aleatorio">Aleatorio</button>
+          </div>
+          <button class="boton boton-fantasma" id="ln-compartir">Copiar enlace con este sistema</button>
+        </aside>
+
+        <div class="contenido">
+          <div class="estado vacio" id="ln-estado">
+            <div class="estado-icono"></div>
+            <div>
+              <strong id="ln-estado-titulo">Listo para calcular</strong>
+              <span id="ln-estado-texto">Edita la matriz o carga un ejemplo y presiona Resolver.</span>
+            </div>
+          </div>
+
+          <div class="metricas cinco" id="ln-metricas">
+            <div class="metrica"><span>det(A)</span><strong data-metrica="det">—</strong></div>
+            <div class="metrica"><span>cond∞(A)</span><strong data-metrica="cond">—</strong></div>
+            <div class="metrica"><span>Residuo Gauss-Jordan</span><strong data-metrica="resgj">—</strong></div>
+            <div class="metrica"><span>Residuo LU</span><strong data-metrica="reslu">—</strong></div>
+            <div class="metrica"><span>‖x<sub>GJ</sub> − x<sub>LU</sub>‖∞</span><strong data-metrica="dif">—</strong></div>
+          </div>
+
+          <div class="tarjeta raiz-tarjeta">
+            <div class="tarjeta-titulo">
+              <h3>Solución x</h3>
+              <button class="boton-chico" id="ln-copiar">Copiar</button>
+            </div>
+            <div class="raiz" id="ln-solucion"><span class="tenue">Aún no hay resultado</span></div>
+          </div>
+
+          <div class="tarjeta">
+            <div class="tarjeta-titulo">
+              <h3>Gauss-Jordan paso a paso</h3>
+              <span class="chip" id="ln-paso-contador">0 / 0</span>
+            </div>
+            <div class="operacion" id="ln-operacion">Resuelve un sistema para ver cómo [A | b] se convierte en [I | x].</div>
+            <div class="matriz-animada" id="ln-matriz-animada"></div>
+            <div class="reproductor">
+              <button class="boton-icono" data-control="inicio" aria-label="Primer paso">⏮</button>
+              <button class="boton-icono" data-control="atras" aria-label="Paso anterior">◀</button>
+              <button class="boton-icono reproducir" data-control="reproducir" aria-label="Reproducir">▶</button>
+              <button class="boton-icono" data-control="adelante" aria-label="Paso siguiente">▶▏</button>
+              <button class="boton-icono" data-control="fin" aria-label="Último paso">⏭</button>
+              <input type="range" id="ln-deslizador" min="0" max="0" value="0" aria-label="Paso" />
+            </div>
+          </div>
+
+          <div class="dos-columnas">
+            <div class="tarjeta">
+              <div class="tarjeta-titulo"><h3>Factorización PA = LU</h3><span class="chip chip-lima">pivoteo parcial</span></div>
+              <div class="lu" id="ln-lu"><span class="tenue">Se muestra al resolver</span></div>
+            </div>
+            <div class="tarjeta">
+              <div class="tarjeta-titulo"><h3 id="ln-grafica-titulo">Interpretación geométrica</h3><button class="boton-chico" id="ln-png">PNG</button></div>
+              <div class="grafica" id="ln-grafica"></div>
+            </div>
+          </div>
+
+          <div class="tarjeta">
+            <div class="tarjeta-titulo"><h3>Gauss-Jordan vs LU</h3></div>
+            <div class="tabla-contenedor" id="ln-comparacion"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- COMPARAR -->
+      <section class="vista" id="vista-comparar" data-vista="comparar">
+        <div class="contenido ancho">
+          <div class="tarjeta destacado">
+            <h2>¿Cómo se relacionan los dos métodos?</h2>
+            <p>
+              Newton-Raphson multivariable <strong>no resuelve el sistema no lineal de una sola vez</strong>: en cada iteración
+              lo aproxima con un <strong>sistema lineal</strong> <span data-tex="J(x_k)\,\delta_k = -F(x_k)"></span> y lo resuelve
+              con factorización LU, la misma del módulo de sistemas lineales. Por eso el costo de Newton es el número de iteraciones
+              multiplicado por el costo de resolver un sistema lineal.
+            </p>
+          </div>
+
+          <div class="dos-columnas">
+            <div class="tarjeta">
+              <div class="tarjeta-titulo"><h3>Costo real según el tamaño n</h3><span class="chip">operaciones medidas</span></div>
+              <div class="grafica" id="cp-operaciones"></div>
+              <p class="nota">Cada punto es un sistema aleatorio n × n resuelto aquí mismo contando multiplicaciones y divisiones.</p>
+            </div>
+            <div class="tarjeta">
+              <div class="tarjeta-titulo"><h3>Convergencia cuadrática de Newton</h3><span class="chip" id="cp-chip-newton">último cálculo</span></div>
+              <div class="grafica" id="cp-newton"></div>
+              <p class="nota" id="cp-newton-nota">Resuelve un sistema en la pestaña Newton para ver cómo el error se eleva al cuadrado en cada vuelta.</p>
+            </div>
+          </div>
+
+          <div class="tarjeta">
+            <div class="tarjeta-titulo"><h3>Últimos resultados</h3></div>
+            <div class="resumen-comparacion" id="cp-resumen"></div>
+          </div>
+
+          <div class="tarjeta">
+            <div class="tarjeta-titulo"><h3>Cara a cara</h3></div>
+            <div class="tabla-contenedor">
+              <table class="tabla">
+                <thead><tr><th>Característica</th><th>Newton-Raphson multivariable</th><th>Gauss-Jordan</th><th>Factorización LU</th></tr></thead>
+                <tbody>
+                  <tr><td>Tipo de problema</td><td>F(x) = 0 no lineal</td><td>Ax = b lineal</td><td>Ax = b lineal</td></tr>
+                  <tr><td>Clase de método</td><td>Iterativo</td><td>Directo</td><td>Directo</td></tr>
+                  <tr><td>Necesita valor inicial</td><td>Sí, x₀ cerca de la raíz</td><td>No</td><td>No</td></tr>
+                  <tr><td>Convergencia</td><td>Cuadrática cerca de la raíz</td><td>Exacta en aritmética exacta</td><td>Exacta en aritmética exacta</td></tr>
+                  <tr><td>Costo</td><td>Iteraciones × (evaluar J + LU)</td><td>≈ n³/2 operaciones</td><td>≈ n³/3 + n² por cada b</td></tr>
+                  <tr><td>Cuándo falla</td><td>J singular, x₀ lejano, divergencia</td><td>Matriz singular</td><td>Matriz singular</td></tr>
+                  <tr><td>Ventaja</td><td>Resuelve curvas, superficies y modelos reales</td><td>Muestra la solución directa [I | x]</td><td>Reutiliza L y U para muchos b</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TEORIA -->
+      <section class="vista" id="vista-teoria" data-vista="teoria">
+        <div class="contenido ancho teoria">
+          <article class="tarjeta">
+            <span class="chip chip-cian">Método 1</span>
+            <h2>Newton-Raphson multivariable</h2>
+            <p>Busca un vector <span data-tex="x^*"></span> tal que <span data-tex="F(x^*) = 0"></span>, donde <span data-tex="F:\mathbb{R}^n \to \mathbb{R}^n"></span>. Se lineariza <span data-tex="F"></span> alrededor del punto actual con la serie de Taylor:</p>
+            <div data-tex-bloque="F(x_k + \delta) \approx F(x_k) + J(x_k)\,\delta = 0"></div>
+            <p>La matriz Jacobiana reúne todas las derivadas parciales:</p>
+            <div data-tex-bloque="J(x) = \begin{bmatrix} \dfrac{\partial f_1}{\partial x_1} & \cdots & \dfrac{\partial f_1}{\partial x_n} \\ \vdots & \ddots & \vdots \\ \dfrac{\partial f_n}{\partial x_1} & \cdots & \dfrac{\partial f_n}{\partial x_n} \end{bmatrix}"></div>
+            <ol class="algoritmo">
+              <li>Elegir <span data-tex="x_0"></span>, tolerancia <span data-tex="\varepsilon"></span> y máximo de iteraciones.</li>
+              <li>Evaluar <span data-tex="F(x_k)"></span> y <span data-tex="J(x_k)"></span>. La app deriva de forma simbólica y si no puede usa diferencias centradas <span data-tex="\frac{F(x+h e_j) - F(x-h e_j)}{2h}"></span>.</li>
+              <li>Resolver el sistema lineal <span data-tex="J(x_k)\,\delta_k = -F(x_k)"></span> con LU.</li>
+              <li>Actualizar <span data-tex="x_{k+1} = x_k + \delta_k"></span>.</li>
+              <li>Parar si <span data-tex="\frac{\|\delta_k\|_\infty}{\max(1, \|x_{k+1}\|_\infty)} < \varepsilon"></span> o <span data-tex="\|F(x_{k+1})\|_\infty < \varepsilon"></span>.</li>
+            </ol>
+            <p>Cerca de la raíz el error cumple <span data-tex="\|e_{k+1}\| \approx C\,\|e_k\|^2"></span>, es decir, la cantidad de dígitos correctos se duplica en cada iteración. La app estima el orden con <span data-tex="p \approx \frac{\ln(e_{k+1}/e_k)}{\ln(e_k/e_{k-1})}"></span>.</p>
+          </article>
+
+          <article class="tarjeta">
+            <span class="chip chip-magenta">Método 2</span>
+            <h2>Sistemas de ecuaciones lineales</h2>
+            <h3>Gauss-Jordan con pivoteo parcial</h3>
+            <p>Aplica operaciones elementales de fila a la matriz aumentada hasta llegar a la identidad:</p>
+            <div data-tex-bloque="[\,A \mid b\,] \;\longrightarrow\; [\,I \mid x\,]"></div>
+            <ol class="algoritmo">
+              <li>En la columna <span data-tex="k"></span> buscar la fila con el mayor <span data-tex="|a_{ik}|"></span> e intercambiarla (pivoteo parcial).</li>
+              <li>Dividir la fila pivote entre <span data-tex="a_{kk}"></span> para que el pivote valga 1.</li>
+              <li>Hacer cero el resto de la columna: <span data-tex="F_i \leftarrow F_i - a_{ik}\,F_k"></span>.</li>
+            </ol>
+            <h3>Factorización LU</h3>
+            <p>Descompone la matriz una sola vez y luego resuelve dos sistemas triangulares:</p>
+            <div data-tex-bloque="PA = LU \quad\Rightarrow\quad Ly = Pb \;\;(\text{adelante}), \qquad Ux = y \;\;(\text{atrás})"></div>
+            <p><span data-tex="L"></span> guarda los multiplicadores de la eliminación, <span data-tex="U"></span> es triangular superior y <span data-tex="P"></span> registra los intercambios de fila. Además <span data-tex="\det(A) = (-1)^s \prod u_{ii}"></span>, donde <span data-tex="s"></span> es el número de intercambios.</p>
+            <h3>Número de condición</h3>
+            <div data-tex-bloque="\kappa_\infty(A) = \|A\|_\infty \, \|A^{-1}\|_\infty"></div>
+            <p>Si <span data-tex="\kappa"></span> es grande la matriz está mal condicionada y pequeños errores en los datos se amplifican en la solución.</p>
+          </article>
+
+          <article class="tarjeta">
+            <span class="chip chip-lima">Guía rápida</span>
+            <h2>Cómo escribir las ecuaciones</h2>
+            <ul class="guia">
+              <li>Una ecuación por línea. Con 2 ecuaciones las variables son <code>x, y</code>, con 3 son <code>x, y, z</code> y así hasta 6 (<code>w, v, u</code>).</li>
+              <li>Puedes escribir <code>x^2 + y^2 = 25</code> o <code>x^2 + y^2 - 25</code>, las dos formas valen.</li>
+              <li>Funciones: <code>sin cos tan exp log sqrt abs sinh cosh atan</code>, constantes <code>pi</code> y <code>e</code>.</li>
+              <li>También acepta la sintaxis de MATLAB <code>.^ .* ./</code>.</li>
+            </ul>
+            <h2>Alertas del sistema</h2>
+            <ul class="guia">
+              <li><strong>Jacobiana singular</strong>: el punto actual no permite despejar <span data-tex="\delta"></span>. Cambia el vector inicial.</li>
+              <li><strong>Valor complejo</strong>: por ejemplo <code>sqrt</code> o <code>log</code> de un número negativo. Elige un x₀ dentro del dominio.</li>
+              <li><strong>No convergió</strong>: se llegó al máximo de iteraciones. Sube el máximo o acerca x₀ a la raíz, el mapa de convergencia ayuda a escogerlo.</li>
+              <li><strong>Diverge</strong>: los valores crecieron sin control, el punto inicial está en una zona mala.</li>
+              <li><strong>Matriz singular</strong>: el sistema lineal no tiene solución única (det(A) = 0).</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer class="pie">
+      <span>Hecho por <strong>Said Ojeda Fabián</strong> · Métodos Numéricos · Grupo 6</span>
+      <span class="tenue">TypeScript · Vite · Plotly · math.js · KaTeX</span>
+    </footer>
+
+    <div class="alertas" id="alertas" aria-live="assertive"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
